@@ -15,8 +15,6 @@ If working on a **specific branch**, use:
 
 git clone https://github.com/tobeking01/mgdb-chat-app.git
 cd mgdb-chat-app
-git checkout <branch-name>  # Replace with your actual branch name
-
 
 ### 2. Install Dependencies
 npm install
