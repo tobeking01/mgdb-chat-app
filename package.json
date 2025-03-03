@@ -1,0 +1,14 @@
+{
+  "name": "mgdb-chat-app",
+  "version": "1.0.0",
+  "description": "Minimalistic chat app to showcase the power of no-sql using mongodb.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+     "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
