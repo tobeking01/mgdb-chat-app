@@ -19,17 +19,17 @@ app.use(express.static("public"));
 
 // WebSocket Connection
 io.on("connection", (socket) => {
-  console.log("🟢 New user connected:", socket.id);
+  console.log("New user connected:", socket.id);
 
   socket.on("message", (msg) => {
-    console.log("💬 Message received:", msg);
+    console.log("Message received:", msg);
     io.emit("message", msg);
   });
 
   socket.on("disconnect", () => {
-    console.log("🔴 User disconnected:", socket.id);
+    console.log("User disconnected:", socket.id);
   });
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
