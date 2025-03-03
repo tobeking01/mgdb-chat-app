@@ -11,8 +11,6 @@ Minimalistic chat app to showcase the power of NoSQL using MongoDB.
 ## ** How to Start the App**
 
 ### 1️. Clone the Repository
-If working on a **specific branch**, use:
-
 git clone https://github.com/tobeking01/mgdb-chat-app.git
 cd mgdb-chat-app
 
