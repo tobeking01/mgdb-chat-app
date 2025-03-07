@@ -3,19 +3,16 @@ const http = require("http");
 const { Server } = require("socket.io");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
+const app = require('./app.js');
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 // Connect to MongoDB
 connectDB();
-
-// Serve static files (frontend)
-app.use(express.static("public"));
 
 // WebSocket Connection
 io.on("connection", (socket) => {
