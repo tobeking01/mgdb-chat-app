@@ -13,10 +13,12 @@ const userSchema = new Schema({
     },
     roleId: {
         type: ObjectId,
+        ref: 'Role',
         required: false,
     },
     orgId: {
         type: ObjectId,
+        ref: 'Organization',
         required: false
     },
     createdAt: {
@@ -26,6 +28,6 @@ const userSchema = new Schema({
     }
 });
 
-const userModel = model('User', userSchema);
+const User = model('User', userSchema);
 
-module.exports = userModel;
+module.exports = User;

@@ -13,6 +13,6 @@ const organizationSchema = new Schema({
     }
 });
 
-const organizationModel = model('Organization', organizationSchema);
+const Organization = model('Organization', organizationSchema);
 
-module.exports = organizationModel;
+module.exports = Organization;

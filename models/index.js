@@ -1,12 +1,12 @@
-const userModel = require('./users');
-const messageModel = require('./messages');
-const organizationModel = require('./organizations');
-const roleModel = require('./roles');
-const roomModel = require('./rooms');
+const User = require('./users');
+const Message = require('./messages');
+const Organization = require('./organizations');
+const Role = require('./roles');
+const Room = require('./rooms');
 module.exports = {
-    userModel,
-    messageModel,
-    organizationModel,
-    roleModel,
-    roomModel,
+    User,
+    Message,
+    Organization,
+    Role,
+    Room,
 }

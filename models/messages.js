@@ -8,8 +8,14 @@ const messageSchema = new Schema({
         },
         required: true,
     },
-    roleId: ObjectId,
-    orgId: ObjectId,
+    roleId: {
+        type: ObjectId,
+        ref: 'Role',
+    },
+    orgId: {
+        type:ObjectId,
+        ref: 'Organization',
+    },
     room: {
         type: {
             id: ObjectId,
@@ -27,6 +33,6 @@ const messageSchema = new Schema({
     }
 });
 
-const messageModel = model('Message', messageSchema);
+const Message = model('Message', messageSchema);
 
-module.exports = messageModel;
+module.exports = Message;
