@@ -3,10 +3,17 @@ const http = require("http");
 const { Server } = require("socket.io");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
-const app = require('./app.js');
+const bodyParser = require("body-parser");
 
 // Load environment variables
 dotenv.config();
+
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// Serve static files (frontend)
+app.use(express.static("public"));
 
 const server = http.createServer(app);
 const io = new Server(server);

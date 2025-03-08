@@ -1,11 +1,9 @@
 const {Router} = require('express');
-const {signIn, signOut, getCurrentUser} = require('../services/authService');
+const {login} = require('../services/userService');
 
 const initRoutes = () => {
     const router = Router();
-    router.post('/login', signIn);
-    router.get('/current-user', getCurrentUser);
-    router.get('/sign-out', signOut);
+    router.post('/login', login);
     return router;
 }
 

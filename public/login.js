@@ -11,7 +11,7 @@ document.getElementById('login-btn').onclick = () => {
             body: JSON.stringify({email: email}),
         }).then(result => {
             console.log('Sign in successfully');
-            window.location.href='/';
+            window.location.href = '/chat-page.html';
         })
         .catch(err => {
             console.log('Invalid credential');
