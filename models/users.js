@@ -14,12 +14,12 @@ const userSchema = new Schema({
     roleId: {
         type: ObjectId,
         ref: 'Role',
-        required: false,
+        required: true,
     },
     orgId: {
         type: ObjectId,
         ref: 'Organization',
-        required: false
+        required: true
     },
     createdAt: {
         type: Date,
