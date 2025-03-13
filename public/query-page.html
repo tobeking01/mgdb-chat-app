@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Query Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    #query-menu {
+      margin-bottom: 20px;
+    }
+    #query-menu button {
+      margin-right: 10px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .query-section {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: none;
+      border-radius: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #bbb;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    #results {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Query Dashboard</h1>
+
+  <!-- Query Menu -->
+  <div id="query-menu">
+    <button onclick="showQuery('query1')">Messages in Chat Room</button>
+    <button onclick="showQuery('query2')">Active Chat Rooms</button>
+    <button onclick="showQuery('query3')">Active Users</button>
+    <button onclick="showQuery('query4')">Keyword Search</button>
+  </div>
+
+  <!-- Query Sections -->
+  <div id="query-content">
+    <!-- Query 1: Messages in a Specific Chat Room -->
+    <div id="query1" class="query-section">
+      <h2>Find all messages in a specific chat room (with user details)</h2>
+      <label for="chatRoomSelect">Select Chat Room:</label>
+      <select id="chatRoomSelect">
+        <option value="67c78feaf7177133d0e8b0ab">General Chat</option>
+        <option value="67c79010f7177133d0e8b0ac">Tech Talk</option>
+        <option value="67c79011f7177133d0e8b0ad">Random</option>
+        <option value="67c79012f7177133d0e8b0ae">Project Collaboration</option>
+        <option value="67c79013f7177133d0e8b0af">Support</option>
+      </select>
+      <button onclick="runQuery1()">Run Query</button>
+    </div>
+
+    <!-- Query 2: Most Active Chat Rooms -->
+    <div id="query2" class="query-section">
+      <h2>Find the most active chat rooms (by message count)</h2>
+      <button onclick="runQuery2()">Run Query</button>
+    </div>
+
+    <!-- Query 3: Most Active Users -->
+    <div id="query3" class="query-section">
+      <h2>Find the most active users (by message count)</h2>
+      <button onclick="runQuery3()">Run Query</button>
+    </div>
+
+    <!-- Query 4: Keyword Search -->
+    <div id="query4" class="query-section">
+      <h2>Find messages containing specific keywords</h2>
+      <label for="keywordInput">Enter keyword:</label>
+      <input type="text" id="keywordInput" placeholder="e.g., update, error">
+      <button onclick="runQuery4()">Run Query</button>
+    </div>
+  </div>
+
+  <!-- Query Results -->
+  <div id="results">
+    <h2>Query Results</h2>
+    <div id="resultsContainer"></div>
+  </div>
+
+  <script>
+    function showQuery(queryId) {
+      document.querySelectorAll(".query-section").forEach(section => {
+        section.style.display = "none";
+      });
+      document.getElementById(queryId).style.display = "block";
+      document.getElementById("resultsContainer").innerHTML = "";
+    }
+
+    async function fetchQuery(url, params = {}) {
+      try {
+        const response = await fetch(url, { 
+          method: "GET", 
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        return [];
+      }
+    }
+
+    async function runQuery1() {
+      let roomId = document.getElementById("chatRoomSelect").value;
+      let results = await fetchQuery(`/api/messages?roomId=${roomId}`);
+      displayResultsTable(results, ["Username", "Email", "Room", "Message", "Timestamp"]);
+    }
+
+    async function runQuery2() {
+      let results = await fetchQuery("/api/chatrooms/active");
+      displayResultsTable(results, ["Room", "Message Count"]);
+    }
+
+    async function runQuery3() {
+      let results = await fetchQuery("/api/users/active");
+      displayResultsTable(results, ["Username", "Email", "Message Count"]);
+    }
+
+    async function runQuery4() {
+      let keyword = document.getElementById("keywordInput").value;
+      let results = await fetchQuery(`/api/messages/search?keyword=${keyword}`);
+      displayResultsTable(results, ["Username", "Email", "Room", "Message", "Timestamp"]);
+    }
+
+    function displayResultsTable(data, columns) {
+      let container = document.getElementById("resultsContainer");
+      if (!data.length) {
+        container.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      let html = "<table><thead><tr>";
+      columns.forEach(col => html += `<th>${col}</th>`);
+      html += "</tr></thead><tbody>";
+
+      data.forEach(row => {
+        html += "<tr>";
+        columns.forEach(col => {
+          let key = col.toLowerCase().replace(" ", "");
+          html += `<td>${row[key] || "-"}</td>`;
+        });
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      container.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
