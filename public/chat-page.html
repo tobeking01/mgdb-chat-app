@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>General Chat Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    #chat-menu {
+      margin-bottom: 20px;
+    }
+    #chat-menu submit-button {
+      margin-right: 10px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .query-section {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: none;
+      border-radius: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #bbb;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    #results {
+      margin-top: 30px;
+    }
+    #accessible-channels {
+
+    }
+  </style>
+</head>
+<body>
+  <h1>Chat Room</h1>
+
+  <div id="chat-history">
+    <div style="height: 300px; overflow-y: auto; border: 1px solid #bbb; padding: 10px; margin-bottom: 10px;">
+      <p>[13:45] &lt;user1&gt; Hello everyone!</p>
+      <p>[13:46] &lt;user2&gt; Hi there, how's it going?</p>
+      <p>[13:47] &lt;system&gt; user3 has joined #general</p>
+      <p>[13:48] &lt;user3&gt; Hey all, what's up?</p>
+    </div>
+    <div>
+      <input type="text" id="message-input" placeholder="Type message..." style="width: 80%;">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <div id="accessible-channels" style="margin-left: 20px;">
+    <h2>Channels</h2>
+    <p>#general #admin #random</p>
+  </div>
+
+  <div id="current-users">
+    <h2>Users</h2>
+    <p>user1, user2, user3</p>
+  </div>
+
+  <div id="query-menu">
+    <button onclick="showQuery('query1')">List of users in room</button>
+    <button onclick="showQuery('query2')">Active Chat Rooms</button>
+    <button onclick="showQuery('query3')">Active Users</button>
+    <button onclick="showQuery('query4')">Keyword Search</button>
+  </div>
+
+  <!-- Query 4: Keyword Search -->
+  <div id="query4" class="query-section">
+    <h2>Find messages containing specific keywords</h2>
+    <label for="keywordInput">Enter keyword:</label>
+    <input type="text" id="keywordInput" placeholder="e.g., update, error">
+    <button onclick="runQuery4()">Run Query</button>
+  </div>
+
+  <!-- Query Results -->
+  <div id="results">
+    <h2>Query Results</h2>
+    <div id="resultsContainer"></div>
+  </div>
+
+  <script>
+    function showQuery(queryId) {
+      document.querySelectorAll(".query-section").forEach(section => {
+        section.style.display = "none";
+      });
+      document.getElementById(queryId).style.display = "block";
+      document.getElementById("resultsContainer").innerHTML = "";
+    }
+
+    async function fetchQuery(url, params = {}) {
+      try {
+        const response = await fetch(url, { 
+          method: "GET", 
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        return [];
+      }
+    }
+
+    async function runQuery1() {
+      let roomId = document.getElementById("chatRoomSelect").value;
+      let results = await fetchQuery(`/api/messages?roomId=${roomId}`);
+      displayResultsTable(results, ["Username", "Email", "Room", "Message", "Timestamp"]);
+    }
+
+    async function runQuery2() {
+      let results = await fetchQuery("/api/chatrooms/active");
+      displayResultsTable(results, ["Room", "Message Count"]);
+    }
+
+    async function runQuery3() {
+      let results = await fetchQuery("/api/users/active");
+      displayResultsTable(results, ["Username", "Email", "Message Count"]);
+    }
+
+    async function runQuery4() {
+      let keyword = document.getElementById("keywordInput").value;
+      let results = await fetchQuery(`/api/messages/search?keyword=${keyword}`);
+      displayResultsTable(results, ["Username", "Email", "Room", "Message", "Timestamp"]);
+    }
+
+    function displayResultsTable(data, columns) {
+      let container = document.getElementById("resultsContainer");
+      if (!data.length) {
+        container.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      let html = "<table><thead><tr>";
+      columns.forEach(col => html += `<th>${col}</th>`);
+      html += "</tr></thead><tbody>";
+
+      data.forEach(row => {
+        html += "<tr>";
+        columns.forEach(col => {
+          let key = col.toLowerCase().replace(" ", "");
+          html += `<td>${row[key] || "-"}</td>`;
+        });
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      container.innerHTML = html;
+    }
+
+    function sendMessage() {
+      let input = document.getElementById("message-input");
+      let message = input.value;
+      if (message) {
+        let chat = document.querySelector("#chat-history div:first-child");
+        let time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        chat.innerHTML += `<p>[${time}] &lt;user1&gt; ${message}</p>`;
+        input.value = "";
+        chat.scrollTop = chat.scrollHeight;
+      }
+    }
+  </script>
+</body>
+</html>
