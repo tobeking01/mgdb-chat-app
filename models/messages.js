@@ -3,7 +3,10 @@ const { model, Schema, ObjectId } = require("mongoose");
 const messageSchema = new Schema({
     user: {
         type: {
-            id: ObjectId,
+            id: {
+                type: ObjectId,
+                ref: 'User',
+            },
             username: String
         },
         required: true,
@@ -26,7 +29,7 @@ const messageSchema = new Schema({
         type: String,
         required: true,
     },
-    createdAt: {
+    timestamp: {
         type: Date,
         required: true,
         default: Date.now,
