@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
 const bodyParser = require("body-parser");
+const initRoutes = require("./routes/routes")
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +21,10 @@ connectDB();
 
 // Serve static files (frontend)
 app.use(express.static("public"));
+
+//Init routes
+const router = initRoutes();
+app.use('/', router);
 
 // WebSocket Connection
 io.on("connection", (socket) => {
