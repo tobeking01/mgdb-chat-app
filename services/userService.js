@@ -1,5 +1,4 @@
-const User = require('../models/index');
-const { request } = require('express');
+const {User} = require('../models/index');
 
 const login = async (request, response) => {
     const {email} = request.body;
