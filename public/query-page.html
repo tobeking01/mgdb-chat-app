@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Query Dashboard</title>
+  <!--
+    This file is the main HTML layout for the Admin Query Dashboard.
+    It includes a menu of queries, individual query sections,
+    and a "results" container where data is displayed in tables.
+    The JavaScript logic is loaded separately from query-page.js.
+  -->
   <style>
+    /* Basic styling for a clean, readable dashboard layout */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -44,28 +51,27 @@
   </style>
 </head>
 <body>
+  <!-- Main title of the Admin Query Dashboard -->
   <h1>Admin Query Dashboard</h1>
 
-  <!-- Query Menu -->
+  <!-- Query Menu: Buttons to switch between different queries -->
   <div id="query-menu">
     <button onclick="showQuery('query1')">Messages in Chat Room</button>
     <button onclick="showQuery('query2')">Active Chat Rooms</button>
     <button onclick="showQuery('query3')">Active Users</button>
     <button onclick="showQuery('query4')">Keyword Search</button>
+    <button onclick="showQuery('query5')">Least Active Users by Role</button>
   </div>
 
-  <!-- Query Sections -->
+  <!-- Query Content: Each query is placed in its own <div> with class="query-section" -->
   <div id="query-content">
-    <!-- Query 1: Messages in a Specific Chat Room -->
+    <!-- Query 1: Messages in a specific chat room -->
     <div id="query1" class="query-section">
       <h2>Find all messages in a specific chat room (with user details)</h2>
       <label for="chatRoomSelect">Select Chat Room:</label>
       <select id="chatRoomSelect">
-        <option value="67c78feaf7177133d0e8b0ab">General Chat</option>
-        <option value="67c79010f7177133d0e8b0ac">Tech Talk</option>
-        <option value="67c79011f7177133d0e8b0ad">Random</option>
-        <option value="67c79012f7177133d0e8b0ae">Project Collaboration</option>
-        <option value="67c79013f7177133d0e8b0af">Support</option>
+        <!-- "Loading..." room names will be populated dynamically via JavaScript -->
+        <option value="">Loading rooms...</option>
       </select>
       <button onclick="runQuery1()">Run Query</button>
     </div>
@@ -91,80 +97,26 @@
     </div>
   </div>
 
-  <!-- Query Results -->
+  <!-- Query 5: least active users by Role -->
+<div id="query5" class="query-section">
+  <h2>Find the least active users by role</h2>
+  <label for="roleSelect">Select Role:</label>
+  <select id="roleSelect">
+    <option value="">Loading roles...</option>
+  </select>
+  <button onclick="runQuery5()">Run Query</button>
+</div>
+
+  <!-- Results Section: Where tables are rendered after each query -->
   <div id="results">
     <h2>Query Results</h2>
     <div id="resultsContainer"></div>
   </div>
 
-  <script>
-    function showQuery(queryId) {
-      document.querySelectorAll(".query-section").forEach(section => {
-        section.style.display = "none";
-      });
-      document.getElementById(queryId).style.display = "block";
-      document.getElementById("resultsContainer").innerHTML = "";
-    }
-
-    async function fetchQuery(url, params = {}) {
-      try {
-        const response = await fetch(url, { 
-          method: "GET", 
-          headers: { "Content-Type": "application/json" }
-        });
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        return [];
-      }
-    }
-
-    async function runQuery1() {
-      let roomId = document.getElementById("chatRoomSelect").value;
-      let results = await fetchQuery(`/api/messages?roomId=${roomId}`);
-      displayResultsTable(results, ["Username", "Email", "Room", "Message", "Timestamp"]);
-    }
-
-    async function runQuery2() {
-      let results = await fetchQuery("/api/chatrooms/active");
-      displayResultsTable(results, ["Room", "Message Count"]);
-    }
-
-    async function runQuery3() {
-      let results = await fetchQuery("/api/users/active");
-      displayResultsTable(results, ["Username", "Email", "Message Count"]);
-    }
-
-    async function runQuery4() {
-      let keyword = document.getElementById("keywordInput").value;
-      let results = await fetchQuery(`/api/messages/search?keyword=${keyword}`);
-      displayResultsTable(results, ["Username", "Email", "Room", "Message", "Timestamp"]);
-    }
-
-    function displayResultsTable(data, columns) {
-      let container = document.getElementById("resultsContainer");
-      if (!data.length) {
-        container.innerHTML = "<p>No results found.</p>";
-        return;
-      }
-
-      let html = "<table><thead><tr>";
-      columns.forEach(col => html += `<th>${col}</th>`);
-      html += "</tr></thead><tbody>";
-
-      data.forEach(row => {
-        html += "<tr>";
-        columns.forEach(col => {
-          let key = col.toLowerCase().replace(" ", "");
-          html += `<td>${row[key] || "-"}</td>`;
-        });
-        html += "</tr>";
-      });
-
-      html += "</tbody></table>";
-      container.innerHTML = html;
-    }
-  </script>
+  <!--
+    Load the external JavaScript that contains our querying logic.
+    Note that it should be placed at the bottom so it can access the DOM elements above.
+  -->
+  <script src="query-page.js"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
-const {User} = require('../models/index');
+const User = require('../models/index');
+const { request } = require('express');
 
 const login = async (request, response) => {
     const {email} = request.body;
@@ -13,3 +14,5 @@ const login = async (request, response) => {
 module.exports = {
     login,
 };
+
+
