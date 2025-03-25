@@ -19,4 +19,4 @@ Minimalistic chat app to showcase the power of NoSQL using MongoDB.
 
 ### 3. Start the App
 - npm start 
-- Auto-restart on file changes (development mode): npm run dev
+- npm run dev - Auto-restart on file changes (development mode) 
