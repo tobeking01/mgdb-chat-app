@@ -2,11 +2,13 @@ const {Router} = require('express');
 const {login} = require('../services/userService');
 const {getMessagesByRoom, searchMessages, getActiveUsers, getActiveChatRooms, getLeastActiveUsers} = require('../services/messageService');
 const {getAllRooms} = require('../services/roomService');
+const { getAllRoles } = require('../services/roleService');
 
 const initRoutes = () => {
     const router = Router();
     router.post('/login', login);
     router.get('/api/chatrooms', getAllRooms);
+    router.get('/api/roles', getAllRoles);
     router.get('/api/users/active', getActiveUsers);
     router.get('/api/messages', getMessagesByRoom);
     router.get('/api/chatrooms/active', getActiveChatRooms);
