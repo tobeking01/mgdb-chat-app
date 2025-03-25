@@ -1,8 +1,8 @@
 import random
 from datetime import datetime, timedelta
-from faker import Faker
-from pymongo import MongoClient
-from bson import ObjectId
+from faker import Faker # type: ignore
+from pymongo import MongoClient # type: ignore
+from bson import ObjectId # type: ignore
 
 fake = Faker()
 
