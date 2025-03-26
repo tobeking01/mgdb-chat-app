@@ -94,14 +94,15 @@ const getActiveUsers = async(request, response) => {
     response.json(result);
 }
 
-const getLeastActiveUsers = async(request, response) => {
+const getLeastActiveUsers = async (request, response) => {
     const roleId = request.query.roleId;
     console.log(`Find least active user by roleId ${roleId}`);
+
     if (!roleId) {
         console.log('Missing roleId');
-        response.json([]);
-        return response;
+        return response.json([]);
     }
+
     const aggregatorOpts = [
         {
             $lookup: {
@@ -111,43 +112,48 @@ const getLeastActiveUsers = async(request, response) => {
                 as: "userDetail"
             }
         },
-        {
-            $unwind: "$user"
-        },
-        {
-            $unwind: "$userDetail"
-        },
+        { $unwind: "$user" },
+        { $unwind: "$userDetail" },
         {
             $match: {
                 'userDetail.roleId': new ObjectId(roleId),
             }
-
         },
         {
-            $group: {
-                _id: "$userDetail",
-                count: { $sum: 1 }
-            },
-        },
-        {
-            $sort: {
-                count: 1,
+            $lookup: {
+                from: "roles", // this is correct due to your model name
+                localField: "userDetail.roleId",
+                foreignField: "_id",
+                as: "roleDetail"
             }
         },
+        { $unwind: "$roleDetail" },
+        {
+            $group: {
+                _id: {
+                    username: "$userDetail.username",
+                    email: "$userDetail.email",
+                    role: "$roleDetail.roleName" // use `roleName` here
+                },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { count: 1 } },
         {
             $project: {
-                _id: 0,                     // Exclude the "_id" field
+                _id: 0,
                 username: "$_id.username",
-                role: "$_id.roleId",
-                email: "$_id.email",               // Include the grouped field as "item"
-                "messagecount": "$count"            // Include the "totalQuantity"
+                email: "$_id.email",
+                role: "$_id.role",
+                messagecount: "$count"
             }
         }
     ];
 
     const result = await Message.aggregate(aggregatorOpts).exec();
     response.json(result);
-}
+};
+
 
 const getActiveChatRooms = async(request, response) => {
     const aggregatorOpts = [
