@@ -88,7 +88,7 @@ messages = []
 message_count = 0
 
 for user in users:
-    for _ in range(100):
+    for _ in range(random.randint(100, 200)):
         room = random.choice(rooms)
         messages.append({
             "_id": generate_oid(),
