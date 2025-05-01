@@ -3,120 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Query Dashboard</title>
-  <!--
-    This file is the main HTML layout for the Admin Query Dashboard.
-    It includes a menu of queries, individual query sections,
-    and a "results" container where data is displayed in tables.
-    The JavaScript logic is loaded separately from query-page.js.
-  -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    /* Basic styling for a clean, readable dashboard layout */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    h1, h2 {
-      color: #333;
-    }
-    #query-menu {
-      margin-bottom: 20px;
-    }
-    #query-menu button {
-      margin-right: 10px;
-      padding: 10px 15px;
-      cursor: pointer;
-    }
-    .query-section {
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin-bottom: 20px;
-      display: none;
-      border-radius: 5px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    table, th, td {
-      border: 1px solid #bbb;
-    }
-    th, td {
-      padding: 8px;
-      text-align: left;
-    }
     #results {
       margin-top: 30px;
     }
+    .query-section {
+      display: none;
+    }
+    table {
+      margin-top: 15px;
+    }
   </style>
 </head>
-<body>
-  <!-- Main title of the Admin Query Dashboard -->
-  <h1>Admin Query Dashboard</h1>
+<body class="bg-light">
 
-  <!-- Query Menu: Buttons to switch between different queries -->
-  <div id="query-menu">
-    <button onclick="showQuery('query1')">Messages in Chat Room</button>
-    <button onclick="showQuery('query2')">Active Chat Rooms</button>
-    <button onclick="showQuery('query3')">Active Users</button>
-    <button onclick="showQuery('query4')">Keyword Search</button>
-    <button onclick="showQuery('query5')">Least Active Users by Role</button>
+  <div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 mb-0">Admin Query Dashboard</h1>
+        <small class="text-muted">Welcome, <span id="adminEmail">admin@example.com</span></small>
+      </div>
+      <div>
+        <a href="/chat-page.html" class="btn btn-outline-primary me-2">Back to Chat</a>
+        <button class="btn btn-danger" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Query Menu -->
+    <div id="query-menu" class="mb-4">
+      <div class="btn-group flex-wrap" role="group">
+        <button class="btn btn-primary" onclick="showQuery('query1')">Messages in Chat Room</button>
+        <button class="btn btn-primary" onclick="showQuery('query2')">Active Chat Rooms</button>
+        <button class="btn btn-primary" onclick="showQuery('query3')">Active Users</button>
+        <button class="btn btn-primary" onclick="showQuery('query4')">Keyword Search</button>
+        <button class="btn btn-primary" onclick="showQuery('query5')">Least Active Users by Role</button>
+      </div>
+    </div>
+
+    <!-- Query Sections -->
+    <div id="query-content">
+
+      <!-- Query 1 -->
+      <div id="query1" class="query-section card p-4 mb-4">
+        <h4>Messages in Chat Room</h4>
+        <div class="mb-3">
+          <label for="chatRoomSelect" class="form-label">Select Chat Room:</label>
+          <select id="chatRoomSelect" class="form-select">
+            <option value="">Loading rooms...</option>
+          </select>
+        </div>
+        <button class="btn btn-success" onclick="runQuery1()">Run Query</button>
+      </div>
+
+      <!-- Query 2 -->
+      <div id="query2" class="query-section card p-4 mb-4">
+        <h4>Most Active Chat Rooms</h4>
+        <button class="btn btn-success" onclick="runQuery2()">Run Query</button>
+      </div>
+
+      <!-- Query 3 -->
+      <div id="query3" class="query-section card p-4 mb-4">
+        <h4>Most Active Users</h4>
+        <button class="btn btn-success" onclick="runQuery3()">Run Query</button>
+      </div>
+
+      <!-- Query 4 -->
+      <div id="query4" class="query-section card p-4 mb-4">
+        <h4>Search Messages by Keyword</h4>
+        <div class="mb-3">
+          <label for="keywordInput" class="form-label">Keyword:</label>
+          <input type="text" id="keywordInput" class="form-control" placeholder="e.g., update, error">
+        </div>
+        <button class="btn btn-success" onclick="runQuery4()">Run Query</button>
+      </div>
+
+      <!-- Query 5 -->
+      <div id="query5" class="query-section card p-4 mb-4">
+        <h4>Least Active Users by Role</h4>
+        <div class="mb-3">
+          <label for="roleSelect" class="form-label">Select Role:</label>
+          <select id="roleSelect" class="form-select">
+            <option value="">Loading roles...</option>
+          </select>
+        </div>
+        <button class="btn btn-success" onclick="runQuery5()">Run Query</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results" class="card p-4">
+      <h4>Query Results</h4>
+      <div id="resultsContainer" class="table-responsive"></div>
+    </div>
   </div>
 
-  <!-- Query Content: Each query is placed in its own <div> with class="query-section" -->
-  <div id="query-content">
-    <!-- Query 1: Messages in a specific chat room -->
-    <div id="query1" class="query-section">
-      <h2>Find all messages in a specific chat room (with user details)</h2>
-      <label for="chatRoomSelect">Select Chat Room:</label>
-      <select id="chatRoomSelect">
-        <!-- "Loading..." room names will be populated dynamically via JavaScript -->
-        <option value="">Loading rooms...</option>
-      </select>
-      <button onclick="runQuery1()">Run Query</button>
-    </div>
-
-    <!-- Query 2: Most Active Chat Rooms -->
-    <div id="query2" class="query-section">
-      <h2>Find the most active chat rooms (by message count)</h2>
-      <button onclick="runQuery2()">Run Query</button>
-    </div>
-
-    <!-- Query 3: Most Active Users -->
-    <div id="query3" class="query-section">
-      <h2>Find the most active users (by message count)</h2>
-      <button onclick="runQuery3()">Run Query</button>
-    </div>
-
-    <!-- Query 4: Keyword Search -->
-    <div id="query4" class="query-section">
-      <h2>Find messages containing specific keywords</h2>
-      <label for="keywordInput">Enter keyword:</label>
-      <input type="text" id="keywordInput" placeholder="e.g., update, error">
-      <button onclick="runQuery4()">Run Query</button>
-    </div>
-  </div>
-
-  <!-- Query 5: least active users by Role -->
-<div id="query5" class="query-section">
-  <h2>Find the least active users by role</h2>
-  <label for="roleSelect">Select Role:</label>
-  <select id="roleSelect">
-    <option value="">Loading roles...</option>
-  </select>
-  <button onclick="runQuery5()">Run Query</button>
-</div>
-
-  <!-- Results Section: Where tables are rendered after each query -->
-  <div id="results">
-    <h2>Query Results</h2>
-    <div id="resultsContainer"></div>
-  </div>
-
-  <!--
-    Load the external JavaScript that contains our querying logic.
-    Note that it should be placed at the bottom so it can access the DOM elements above.
-  -->
+  <!-- Script -->
   <script src="query-page.js"></script>
+  <script>
+    // 🔐 Validate login session
+    const email = sessionStorage.getItem("chat_email");
+    if (!email) {
+      alert("You must log in first.");
+      window.location.href = "/login.html";
+    } else {
+      document.getElementById("adminEmail").textContent = email;
+    }
+
+    function logout() {
+      sessionStorage.removeItem("chat_email");
+      window.location.href = "/login.html";
+    }
+  </script>
 </body>
 </html>

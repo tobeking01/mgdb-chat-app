@@ -1,3 +1,4 @@
+// roomService.js
 const { Room } = require('../models/index');
 
 const getAllRooms = async (req, res) => {

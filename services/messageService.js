@@ -1,190 +1,201 @@
-const {Message, User} = require('../models/index');
-const { request } = require('express');
+const { Message, User } = require('../models/index');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+const { sendMessageFromSocket } = require('./socketMessageService');
 
-const getMessagesByRoom = async (request, response) => {
-    const roomId = request.query.roomId;
-    console.log(`Query messages from room ${roomId}`);
-    try {
-        const messages = await Message.find({'room.id': roomId})
-                                    .select("room.name user.id user.username text timestamp")
-                                    .sort({timestamp: -1})
-                                    .populate('user.id', 'email')
-                                    .exec()
-                                    .then(messages => {
-                                        return messages.map(message => ({
-                                                    username: message.user.username,
-                                                    email: message.user.id.email,
-                                                    room: message.room.name,
-                                                    message: message.text,
-                                                    timestamp: message.timestamp,
-                                            }));
-                                    });
-        response.status(200).json(messages);
-    } catch (e) {
-        console.error(e);
-        return [];
-    }
-}
+// Get messages in a specific room
+const getMessagesByRoom = async (req, res) => {
+  const roomId = req.query.roomId;
+  console.log(`Query messages from room ${roomId}`);
 
-const searchMessages = async (request, response) => {
-    const keyword = request.query.keyword;
-    console.log(`Search messages by keyword ${keyword}`);
-    if (!keyword) {
-        console.log('Missing keyword');
-        response.json([]);
-        return response;
-    }
-    const result = await Message.find({'text': { "$regex": keyword, "$options": "i" }})
-                                .select("room.name user.id user.username text timestamp")
-                                .sort({timestamp: -1})
-                                .populate('user.id', 'email')
-                                .exec()
-                                .then(messages => {
-                                    return messages.map(message => ({
-                                                username: message.user.username,
-                                                email: message.user.id.email,
-                                                room: message.room.name,
-                                                message: message.text,
-                                                timestamp: message.timestamp,
-                                        }));
-                                });                
-    response.status(200).json(result);
-}
+  try {
+    const messages = await Message.find({ 'room.id': roomId })
+      .select("room.name user.id user.username text timestamp")
+      .sort({ timestamp: -1 })
+      .populate('user.id', 'email');
 
-const getActiveUsers = async(request, response) => {
-    const aggregatorOpts = [
-        {
-            $lookup: {
-                from: "users",
-                localField: "user.id",
-                foreignField: "_id",
-                as: "userDetail"
-            }
-        },
-        {
-            $unwind: "$user"
-        },
-        {
-            $unwind: "$userDetail"
-        },
-        {
-            $group: {
-                _id: "$userDetail",
-                count: { $sum: 1 }
-            },
-        },
-        {
-            $sort: {
-                count: -1,
-            }
-        },
-        {
-            $project: {
-                _id: 0,                     // Exclude the "_id" field
-                username: "$_id.username",
-                email: "$_id.email",               // Include the grouped field as "item"
-                "messagecount": "$count"            // Include the "totalQuantity"
-            }
-        }
-    ];
+    const formatted = messages.map(message => ({
+      username: message.user.username,
+      email: message.user.id?.email ?? 'Unknown',
+      room: message.room?.name ?? 'Unknown',
+      message: message.text,
+      timestamp: message.timestamp,
+    }));
 
-    const result = await Message.aggregate(aggregatorOpts).exec();
-    response.json(result);
-}
-
-const getLeastActiveUsers = async (request, response) => {
-    const roleId = request.query.roleId;
-    console.log(`Find least active user by roleId ${roleId}`);
-
-    if (!roleId) {
-        console.log('Missing roleId');
-        return response.json([]);
-    }
-
-    const aggregatorOpts = [
-        {
-            $lookup: {
-                from: "users",
-                localField: "user.id",
-                foreignField: "_id",
-                as: "userDetail"
-            }
-        },
-        { $unwind: "$user" },
-        { $unwind: "$userDetail" },
-        {
-            $match: {
-                'userDetail.roleId': new ObjectId(roleId),
-            }
-        },
-        {
-            $lookup: {
-                from: "roles", // this is correct due to your model name
-                localField: "userDetail.roleId",
-                foreignField: "_id",
-                as: "roleDetail"
-            }
-        },
-        { $unwind: "$roleDetail" },
-        {
-            $group: {
-                _id: {
-                    username: "$userDetail.username",
-                    email: "$userDetail.email",
-                    role: "$roleDetail.roleName" // use `roleName` here
-                },
-                count: { $sum: 1 }
-            }
-        },
-        { $sort: { count: 1 } },
-        {
-            $project: {
-                _id: 0,
-                username: "$_id.username",
-                email: "$_id.email",
-                role: "$_id.role",
-                messagecount: "$count"
-            }
-        }
-    ];
-
-    const result = await Message.aggregate(aggregatorOpts).exec();
-    response.json(result);
+    return res.status(200).json(formatted);
+  } catch (err) {
+    console.error("Failed to get messages:", err.message);
+    return res.status(500).json({ error: "Failed to get messages" });
+  }
 };
 
+// Search messages by keyword
+const searchMessages = async (req, res) => {
+  const keyword = req.query.keyword;
+  if (!keyword) return res.status(400).json({ error: "Missing keyword" });
 
-const getActiveChatRooms = async(request, response) => {
-    const aggregatorOpts = [
-        {
-            $group: {
-                _id: "$room",
-                count: { $sum: 1 }
-            },
-        },
-        {
-            $sort: {
-                count: -1,
-            }
-        },
-        {
-            $project: {
-                _id: 0,                     // Exclude the "_id" field
-                room: "$_id.name",            // Include the grouped field as "item"
-                "messagecount": "$count"            // Include the "totalQuantity"
-            }
-        }
-    ];
+  try {
+    const messages = await Message.find({ text: { $regex: keyword, $options: "i" } })
+      .select("room.name user.id user.username text timestamp")
+      .sort({ timestamp: -1 })
+      .populate('user.id', 'email');
 
-    const result = await Message.aggregate(aggregatorOpts).exec();
-    response.json(result);
-}
+    const formatted = messages.map(message => ({
+      username: message.user.username,
+      email: message.user.id?.email ?? 'Unknown',
+      room: message.room?.name ?? 'Unknown',
+      message: message.text,
+      timestamp: message.timestamp,
+    }));
+
+    return res.status(200).json(formatted);
+  } catch (err) {
+    console.error("Search failed:", err.message);
+    return res.status(500).json({ error: "Failed to search messages" });
+  }
+};
+
+// Most active users
+const getActiveUsers = async (req, res) => {
+  try {
+    const result = await Message.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "user.id",
+          foreignField: "_id",
+          as: "userDetail",
+        },
+      },
+      { $unwind: "$user" },
+      { $unwind: "$userDetail" },
+      {
+        $group: {
+          _id: "$userDetail",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      {
+        $project: {
+          _id: 0,
+          username: "$_id.username",
+          email: "$_id.email",
+          messagecount: "$count",
+        },
+      },
+    ]);
+
+    return res.json(result);
+  } catch (err) {
+    console.error("Failed to get active users:", err.message);
+    return res.status(500).json({ error: "Failed to get active users" });
+  }
+};
+
+// Least active users by role
+const getLeastActiveUsers = async (req, res) => {
+  const roleId = req.query.roleId;
+  if (!roleId) return res.status(400).json({ error: "Missing roleId" });
+
+  try {
+    const result = await Message.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "user.id",
+          foreignField: "_id",
+          as: "userDetail",
+        },
+      },
+      { $unwind: "$user" },
+      { $unwind: "$userDetail" },
+      {
+        $match: {
+          "userDetail.roleId": new ObjectId(roleId),
+        },
+      },
+      {
+        $lookup: {
+          from: "roles",
+          localField: "userDetail.roleId",
+          foreignField: "_id",
+          as: "roleDetail",
+        },
+      },
+      { $unwind: "$roleDetail" },
+      {
+        $group: {
+          _id: {
+            username: "$userDetail.username",
+            email: "$userDetail.email",
+            role: "$roleDetail.roleName",
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: 1 } },
+      {
+        $project: {
+          _id: 0,
+          username: "$_id.username",
+          email: "$_id.email",
+          role: "$_id.role",
+          messagecount: "$count",
+        },
+      },
+    ]);
+
+    return res.json(result);
+  } catch (err) {
+    console.error("Failed to get least active users:", err.message);
+    return res.status(500).json({ error: "Failed to get least active users" });
+  }
+};
+
+// Most active chat rooms
+const getActiveChatRooms = async (req, res) => {
+  try {
+    const result = await Message.aggregate([
+      {
+        $group: {
+          _id: "$room",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      {
+        $project: {
+          _id: 0,
+          room: "$_id.name",
+          messagecount: "$count",
+        },
+      },
+    ]);
+
+    return res.json(result);
+  } catch (err) {
+    console.error("Failed to get active chat rooms:", err.message);
+    return res.status(500).json({ error: "Failed to get active chat rooms" });
+  }
+};
+
+// Save new message
+const sendMessage = async (req, res) => {
+  try {
+    const savedMessage = await sendMessageFromSocket(req.body);
+    return res.status(201).json({ message: savedMessage });
+  } catch (err) {
+    console.error("Failed to send message:", err.message);
+    return res.status(500).json({ error: "Failed to send message" });
+  }
+};
 
 module.exports = {
-    getMessagesByRoom,
-    searchMessages,
-    getActiveUsers,
-    getActiveChatRooms,
-    getLeastActiveUsers
+  getMessagesByRoom,
+  searchMessages,
+  getActiveUsers,
+  getActiveChatRooms,
+  getLeastActiveUsers,
+  sendMessage,
 };
