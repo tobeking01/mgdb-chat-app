@@ -159,7 +159,7 @@ const getActiveChatRooms = async (req, res) => {
     const result = await Message.aggregate([
       {
         $group: {
-          _id: "$room",
+          _id: "$room.name",
           count: { $sum: 1 },
         },
       },
@@ -167,7 +167,7 @@ const getActiveChatRooms = async (req, res) => {
       {
         $project: {
           _id: 0,
-          room: "$_id.name",
+          room: "$_id",
           messagecount: "$count",
         },
       },
